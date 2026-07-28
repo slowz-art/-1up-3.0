@@ -7722,6 +7722,193 @@ Library.Sections.ESPPreview = function(self, Data)
             ZIndex = 2,
             BorderSizePixel = 0
         })
+
+        -- ESP overlay (2D indicators over the viewport)
+        Items["Overlay"] = Instances:Create("Frame", {
+            Parent = Items["Background"].Instance,
+            Name = "\0",
+            BackgroundTransparency = 1,
+            Size = UDim2New(1, 0, 1, 0),
+            ZIndex = 5,
+            BorderSizePixel = 0
+        })
+
+        Items["Box"] = Instances:Create("Frame", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Size = UDim2New(0.42, 0, 0.72, 0),
+            Position = UDim2New(0.29, 0, 0.14, 0),
+            Visible = false,
+            ZIndex = 6
+        })
+        Instances:Create("UIStroke", {
+            Parent = Items["Box"].Instance,
+            Color = FromRGB(255, 255, 255),
+            Thickness = 1.5,
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        })
+
+        Items["Corners"] = Instances:Create("Frame", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            BackgroundTransparency = 1,
+            Size = UDim2New(0.42, 0, 0.72, 0),
+            Position = UDim2New(0.29, 0, 0.14, 0),
+            Visible = false,
+            ZIndex = 6
+        })
+        local cornersSpec = {
+            {0, 0, 0.3, 0.015, 0, 0}, {0, 0, 0.015, 0.22, 0, 0},
+            {1, 0, 0.3, 0.015, 1, 0}, {1, 0, 0.015, 0.22, 1, 0},
+            {0, 1, 0.3, 0.015, 0, 1}, {0, 1, 0.015, 0.22, 0, 1},
+            {1, 1, 0.3, 0.015, 1, 1}, {1, 1, 0.015, 0.22, 1, 1},
+        }
+        for _, s in ipairs(cornersSpec) do
+            Instances:Create("Frame", {
+                Parent = Items["Corners"].Instance,
+                BackgroundColor3 = FromRGB(255, 255, 255),
+                BorderSizePixel = 0,
+                Position = UDim2New(s[1], 0, s[2], 0),
+                Size = UDim2New(s[3], 0, s[4], 0),
+                AnchorPoint = Vector2New(s[5], s[6]),
+                ZIndex = 6
+            })
+        end
+
+        Items["NameLabel"] = Instances:Create("TextLabel", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            FontFace = Library.Font,
+            TextSize = 12,
+            TextColor3 = FromRGB(255, 255, 255),
+            Text = (LocalPlayer and LocalPlayer.Name) or "Player",
+            BackgroundTransparency = 1,
+            Size = UDim2New(1, 0, 0, 16),
+            Position = UDim2New(0, 0, 0, 4),
+            TextXAlignment = Enum.TextXAlignment.Center,
+            Visible = false,
+            ZIndex = 7,
+            BorderSizePixel = 0
+        })
+
+        Items["DistLabel"] = Instances:Create("TextLabel", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            FontFace = Library.Font,
+            TextSize = 11,
+            TextColor3 = FromRGB(200, 200, 200),
+            Text = "12m",
+            BackgroundTransparency = 1,
+            Size = UDim2New(1, 0, 0, 14),
+            Position = UDim2New(0, 0, 1, -18),
+            TextXAlignment = Enum.TextXAlignment.Center,
+            Visible = false,
+            ZIndex = 7,
+            BorderSizePixel = 0
+        })
+
+        Items["HealthBarBg"] = Instances:Create("Frame", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            BackgroundColor3 = FromRGB(20, 20, 20),
+            BorderSizePixel = 0,
+            Size = UDim2New(0, 4, 0.72, 0),
+            Position = UDim2New(0.29, -8, 0.14, 0),
+            Visible = false,
+            ZIndex = 6
+        })
+        Items["HealthBar"] = Instances:Create("Frame", {
+            Parent = Items["HealthBarBg"].Instance,
+            Name = "\0",
+            BackgroundColor3 = FromRGB(80, 255, 80),
+            BorderSizePixel = 0,
+            Size = UDim2New(1, 0, 0.75, 0),
+            Position = UDim2New(0, 0, 0.25, 0),
+            ZIndex = 7
+        })
+
+        Items["HealthText"] = Instances:Create("TextLabel", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            FontFace = Library.Font,
+            TextSize = 10,
+            TextColor3 = FromRGB(80, 255, 80),
+            Text = "100",
+            BackgroundTransparency = 1,
+            Size = UDim2New(0, 30, 0, 12),
+            Position = UDim2New(0.29, -34, 0.14, 0),
+            TextXAlignment = Enum.TextXAlignment.Right,
+            Visible = false,
+            ZIndex = 7,
+            BorderSizePixel = 0
+        })
+    end
+
+    Preview.ESP = {
+        Enabled = false,
+        Box = false,
+        Corner = false,
+        Names = false,
+        Health = false,
+        HealthText = false,
+        Distance = false,
+        Chams = false,
+        Skeleton = false,
+        Rainbow = false,
+    }
+
+    function Preview:SetESP(Key, Value)
+        if type(Key) == "table" then
+            for k, v in pairs(Key) do
+                if Preview.ESP[k] ~= nil then
+                    Preview.ESP[k] = not not v
+                end
+            end
+        elseif type(Key) == "string" and Preview.ESP[Key] ~= nil then
+            Preview.ESP[Key] = not not Value
+        end
+        Preview:RefreshESPOverlay()
+    end
+
+    function Preview:RefreshESPOverlay()
+        local E = Preview.ESP
+        local show = E.Enabled
+        if Items["Box"] then Items["Box"].Instance.Visible = show and E.Box end
+        if Items["Corners"] then Items["Corners"].Instance.Visible = show and E.Corner end
+        if Items["NameLabel"] then Items["NameLabel"].Instance.Visible = show and E.Names end
+        if Items["DistLabel"] then Items["DistLabel"].Instance.Visible = show and E.Distance end
+        if Items["HealthBarBg"] then Items["HealthBarBg"].Instance.Visible = show and E.Health end
+        if Items["HealthText"] then Items["HealthText"].Instance.Visible = show and E.HealthText end
+
+        if PreviewModel then
+            local hl = PreviewModel:FindFirstChild("_ESPChams")
+            if show and E.Chams then
+                if not hl then
+                    hl = Instance.new("Highlight")
+                    hl.Name = "_ESPChams"
+                    hl.FillColor = Color3.fromRGB(0, 116, 224)
+                    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    hl.FillTransparency = 0.5
+                    hl.Parent = PreviewModel
+                end
+                hl.Enabled = true
+            elseif hl then
+                hl.Enabled = false
+            end
+        end
+
+        if show and E.Rainbow then
+            local col = Color3.fromHSV((tick() * 0.5) % 1, 1, 1)
+            local stroke = Items["Box"] and Items["Box"].Instance:FindFirstChildOfClass("UIStroke")
+            if stroke then stroke.Color = col end
+            if Items["Corners"] then
+                for _, c in ipairs(Items["Corners"].Instance:GetChildren()) do
+                    if c:IsA("Frame") then c.BackgroundColor3 = col end
+                end
+            end
+        end
     end
 
     function Preview:SetText(Text)
@@ -8286,6 +8473,13 @@ function Library:_LinoriaBindGroupbox(Section)
         return stub
     end
 
+    function Section:AddESPPreview(Name)
+        if type(self.ESPPreview) == "function" then
+            return self:ESPPreview({ Name = tostring(Name or "ESP Preview") })
+        end
+        return nil
+    end
+
     function Section:AddDivider()
         if type(self.Divider) == "function" then
             return self:Divider()
@@ -8557,7 +8751,7 @@ function Library:_LinoriaAddDependencyBox(Section)
 
     for _, name in ipairs({
         "AddToggle", "AddSlider", "AddDropdown", "AddButton", "AddLabel",
-        "AddInput", "AddKeyPicker", "AddColorPicker", "AddDivider", "AddBlank",
+        "AddInput", "AddKeyPicker", "AddColorPicker", "AddDivider", "AddBlank", "AddESPPreview",
         "Toggle", "Slider", "Dropdown", "Button", "Label", "Textbox", "Keybind",
     }) do
         Depbox[name] = function(_, ...)
