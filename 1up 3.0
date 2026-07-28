@@ -8105,7 +8105,11 @@ function Library:_LinoriaBindGroupbox(Section)
             if self.Set then self:Set(Val) end
         end
         function Drop:SetValues(List)
-            if self.Refresh then self:Refresh(List) end
+            if List == nil then List = self.Values or self.Items end
+            if type(List) == "table" then
+                self.Values = List
+                if self.Refresh then self:Refresh(List) end
+            end
         end
         function Drop:OnChanged(Cb)
             local prev = self.Callback
@@ -8142,6 +8146,47 @@ function Library:_LinoriaBindGroupbox(Section)
     function Section:AddLabel(Text)
         local L = self:Label(Text)
         L.Type = "Label"
+
+        -- Linoria chain: Label:AddColorPicker(Idx, Info)
+        function L:AddColorPicker(Idx, Info)
+            Info = type(Info) == "table" and Info or {}
+            local Cp
+            if type(self.Colorpicker) == "function" then
+                Cp = self:Colorpicker({
+                    Flag = tostring(Idx),
+                    Default = Info.Default,
+                    Callback = Info.Callback,
+                    Alpha = Info.Transparency or Info.Alpha,
+                })
+            else
+                Cp = { Type = "ColorPicker", Value = Info.Default }
+            end
+            Cp.Type = "ColorPicker"
+            Options[Idx] = Cp
+            return self
+        end
+
+        function L:AddKeyPicker(Idx, Info)
+            Info = type(Info) == "table" and Info or {}
+            local Sec = self.Section
+            local Kb
+            if Sec and type(Sec.Keybind) == "function" then
+                Kb = Sec:Keybind({
+                    Name = Info.Text or Info.Name or tostring(Idx),
+                    Flag = tostring(Idx),
+                    Default = Info.Default,
+                    Mode = Info.Mode,
+                    Callback = Info.Callback,
+                })
+            else
+                Kb = { Type = "KeyPicker", Value = Info.Default or "RightControl" }
+            end
+            Kb.Type = "KeyPicker"
+            Kb.Value = Kb.Value or Info.Default or "RightControl"
+            Options[Idx] = Kb
+            return self
+        end
+
         return L
     end
 
@@ -8660,6 +8705,43 @@ function Library:AttemptSave()
         pcall(function() Library.SaveManager:Save() end)
     end
 end
+
+Library.UnloadSignals = Library.UnloadSignals or {}
+
+function Library:OnUnload(Callback)
+    if type(Callback) == "function" then
+        table.insert(Library.UnloadSignals, Callback)
+    end
+end
+
+local _OldUnload = Library.Unload
+function Library:Unload()
+    for _, cb in ipairs(Library.UnloadSignals or {}) do
+        pcall(cb)
+    end
+    if type(_OldUnload) == "function" then
+        return _OldUnload(self)
+    end
+end
+
+-- Menu toggle keybind support (Linoria scripts set Library.ToggleKeybind = Options.SomeKey)
+pcall(function()
+    local UIS = game:GetService("UserInputService")
+    UIS.InputBegan:Connect(function(Input, Gpe)
+        if Gpe then return end
+        local kb = Library.ToggleKeybind
+        if not kb then return end
+        local keyName = (type(kb) == "table" and (kb.Value or kb.Key)) or tostring(kb)
+        if not keyName then return end
+        if Input.KeyCode.Name == keyName or Input.UserInputType.Name == keyName then
+            pcall(function()
+                if Library.Window and Library.Window.SetOpen then
+                    Library.Window:SetOpen(not Library.Window.IsOpen)
+                end
+            end)
+        end
+    end)
+end)
 
 getgenv().Library = Library
 return Library
