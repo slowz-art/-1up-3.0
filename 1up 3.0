@@ -211,12 +211,14 @@ local Library do
 
     Library.Theme = TableClone(Themes["Preset"])
 
-    -- Folders
-    for Index, Value in Library.Folders do 
-        if not isfolder(Value) then
-            makefolder(Value)
+    -- Folders (safe if isfolder/makefolder missing)
+    pcall(function()
+        for Index, Value in Library.Folders do 
+            if isfolder and not isfolder(Value) then
+                if makefolder then makefolder(Value) end
+            end
         end
-    end
+    end)
 
     -- Tweening
     local Tween = { } do
@@ -694,8 +696,15 @@ local Library do
         Library.Font = SemiBold
     end
 
+    local holderParent = nil
+    pcall(function() holderParent = gethui() end)
+    if not holderParent then pcall(function() holderParent = CoreGui end) end
+    if not holderParent then
+        pcall(function() holderParent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end)
+    end
+
     Library.Holder = Instances:Create("ScreenGui", {
-        Parent = gethui(),
+        Parent = holderParent,
         Name = "\0",
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         DisplayOrder = 2,
@@ -703,7 +712,7 @@ local Library do
     })
 
     Library.UnusedHolder = Instances:Create("ScreenGui", {
-        Parent = gethui(),
+        Parent = holderParent or gethui(),
         Name = "\0",
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         Enabled = false,
@@ -2310,8 +2319,8 @@ local Library do
                     })                    
                 end
 
-                Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), OriginalSizes)
-                Library:MakeBlurred(Items["MainFrame"], Window)
+                Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(640, 720), Window)
+                pcall(function() Library:MakeBlurred(Items["MainFrame"], Window) end)
                 
                 Items["LeftTabs"] = Instances:Create("Frame", {
                     Parent = Items["MainFrame"].Instance,
@@ -2326,7 +2335,7 @@ local Library do
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
 
-                Library:MakeBlurred(Items["LeftTabs"], Window)
+                pcall(function() Library:MakeBlurred(Items["LeftTabs"], Window) end)
 
                 local Gui = Items["MainFrame"].Instance
 
@@ -3270,10 +3279,15 @@ local Library do
                     end
                 end
                 
-                NewTween.Tween.Completed:Connect(function()
-                    Debounce = false 
+                if NewTween and NewTween.Tween then
+                    NewTween.Tween.Completed:Connect(function()
+                        Debounce = false 
+                        Items["MainFrame"].Instance.Visible = Window.IsOpen
+                    end)
+                else
+                    Debounce = false
                     Items["MainFrame"].Instance.Visible = Window.IsOpen
-                end)
+                end
             end
 
             if IsMobile then 
@@ -4640,6 +4654,15 @@ local Library do
             end)
 
             Section.Page.Sections[Section.Name] = Section
+            table.insert(Section.Page.Sections, Section)
+
+            if Section.Page.Active then
+                task.defer(function()
+                    pcall(function()
+                        Section:TweenElements(true)
+                    end)
+                end)
+            end
 
             return setmetatable(Section, Library.Sections)
         end
@@ -8144,41 +8167,51 @@ function Library:_LinoriaBindGroupbox(Section)
     end
 
     function Section:AddLabel(Text)
-        local L = self:Label(Text)
+        local L = self:Label(tostring(Text or ""))
         L.Type = "Label"
 
-        -- Linoria chain: Label:AddColorPicker(Idx, Info)
         function L:AddColorPicker(Idx, Info)
             Info = type(Info) == "table" and Info or {}
-            local Cp
-            if type(self.Colorpicker) == "function" then
-                Cp = self:Colorpicker({
-                    Flag = tostring(Idx),
-                    Default = Info.Default,
-                    Callback = Info.Callback,
-                    Alpha = Info.Transparency or Info.Alpha,
-                })
-            else
+            local ok, Cp = pcall(function()
+                if type(self.Colorpicker) == "function" then
+                    return self:Colorpicker({
+                        Flag = tostring(Idx),
+                        Default = Info.Default or Color3.fromRGB(255, 255, 255),
+                        Callback = Info.Callback or function() end,
+                        Alpha = Info.Transparency or Info.Alpha,
+                    })
+                end
+                return nil
+            end)
+            if not ok then
+                warn("[AddColorPicker]", Cp)
+                Cp = { Type = "ColorPicker", Value = Info.Default }
+            end
+            if type(Cp) ~= "table" then
                 Cp = { Type = "ColorPicker", Value = Info.Default }
             end
             Cp.Type = "ColorPicker"
+            if Cp.Value == nil then Cp.Value = Info.Default end
             Options[Idx] = Cp
             return self
         end
 
         function L:AddKeyPicker(Idx, Info)
             Info = type(Info) == "table" and Info or {}
-            local Sec = self.Section
-            local Kb
-            if Sec and type(Sec.Keybind) == "function" then
-                Kb = Sec:Keybind({
-                    Name = Info.Text or Info.Name or tostring(Idx),
-                    Flag = tostring(Idx),
-                    Default = Info.Default,
-                    Mode = Info.Mode,
-                    Callback = Info.Callback,
-                })
-            else
+            local ok, Kb = pcall(function()
+                local Sec = self.Section
+                if Sec and type(Sec.Keybind) == "function" then
+                    return Sec:Keybind({
+                        Name = Info.Text or Info.Name or tostring(Idx),
+                        Flag = tostring(Idx),
+                        Default = Info.Default or "RightControl",
+                        Mode = Info.Mode,
+                        Callback = Info.Callback or function() end,
+                    })
+                end
+                return nil
+            end)
+            if not ok or type(Kb) ~= "table" then
                 Kb = { Type = "KeyPicker", Value = Info.Default or "RightControl" }
             end
             Kb.Type = "KeyPicker"
@@ -8293,12 +8326,20 @@ function Library:CreateWindow(Cfg)
         })
 
         function Page:AddLeftGroupbox(BoxName)
-            local Section = self:Section({ Name = BoxName or "Groupbox", Side = 1 })
+            local Section = self:Section({ Name = tostring(BoxName or "Groupbox"), Side = 1 })
+            if not Section then
+                warn("[AddLeftGroupbox] failed", BoxName)
+                return nil
+            end
             return Library:_LinoriaBindGroupbox(Section)
         end
 
         function Page:AddRightGroupbox(BoxName)
-            local Section = self:Section({ Name = BoxName or "Groupbox", Side = 2 })
+            local Section = self:Section({ Name = tostring(BoxName or "Groupbox"), Side = 2 })
+            if not Section then
+                warn("[AddRightGroupbox] failed", BoxName)
+                return nil
+            end
             return Library:_LinoriaBindGroupbox(Section)
         end
 
@@ -8324,9 +8365,20 @@ function Library:CreateWindow(Cfg)
         return Page
     end
 
+    Library.Window = Win
+
     if Cfg.Center ~= false then
         pcall(function() Win:SetCenter() end)
     end
+
+    -- Ensure visible (Window() already opens; force again safely)
+    pcall(function()
+        if Win.SetOpen then
+            Win:SetOpen(true)
+        elseif Win.Items and Win.Items.MainFrame then
+            Win.Items.MainFrame.Instance.Visible = true
+        end
+    end)
 
     return Win
 end
@@ -8745,3 +8797,4 @@ end)
 
 getgenv().Library = Library
 return Library
+
