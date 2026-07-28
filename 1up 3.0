@@ -7725,11 +7725,12 @@ Library.Sections.ESPPreview = function(self, Data)
 
         -- ESP overlay (2D indicators over the viewport)
         Items["Overlay"] = Instances:Create("Frame", {
-            Parent = Items["Background"].Instance,
+            Parent = Items["ESPPreview"].Instance,
             Name = "\0",
             BackgroundTransparency = 1,
-            Size = UDim2New(1, 0, 1, 0),
-            ZIndex = 5,
+            Position = UDim2New(0, 0, 0, 25),
+            Size = UDim2New(1, 0, 1, -25),
+            ZIndex = 50,
             BorderSizePixel = 0
         })
 
@@ -7746,7 +7747,7 @@ Library.Sections.ESPPreview = function(self, Data)
         Instances:Create("UIStroke", {
             Parent = Items["Box"].Instance,
             Color = FromRGB(255, 255, 255),
-            Thickness = 1.5,
+            Thickness = 2,
             ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         })
 
@@ -7873,25 +7874,39 @@ Library.Sections.ESPPreview = function(self, Data)
     end
 
     function Preview:RefreshESPOverlay()
-        local E = Preview.ESP
-        local show = E.Enabled
-        if Items["Box"] then Items["Box"].Instance.Visible = show and E.Box end
-        if Items["Corners"] then Items["Corners"].Instance.Visible = show and E.Corner end
-        if Items["NameLabel"] then Items["NameLabel"].Instance.Visible = show and E.Names end
-        if Items["DistLabel"] then Items["DistLabel"].Instance.Visible = show and E.Distance end
-        if Items["HealthBarBg"] then Items["HealthBarBg"].Instance.Visible = show and E.Health end
-        if Items["HealthText"] then Items["HealthText"].Instance.Visible = show and E.HealthText end
+        local E = Preview.ESP or {}
+        local show = E.Enabled == true
 
-        if PreviewModel then
-            local hl = PreviewModel:FindFirstChild("_ESPChams")
+        local function setVis(item, on)
+            if item and item.Instance then
+                item.Instance.Visible = on and true or false
+            end
+        end
+
+        setVis(Items["Box"], show and E.Box)
+        setVis(Items["Corners"], show and E.Corner)
+        setVis(Items["NameLabel"], show and E.Names)
+        setVis(Items["DistLabel"], show and E.Distance)
+        setVis(Items["HealthBarBg"], show and E.Health)
+        setVis(Items["HealthText"], show and E.HealthText)
+
+        if Items["Overlay"] and Items["Overlay"].Instance then
+            Items["Overlay"].Instance.Visible = true
+            Items["Overlay"].Instance.ZIndex = 50
+        end
+
+        local model = Preview._Viewmodel or Preview._PreviewModel
+        if model then
+            local hl = model:FindFirstChild("_ESPChams")
             if show and E.Chams then
                 if not hl then
                     hl = Instance.new("Highlight")
                     hl.Name = "_ESPChams"
                     hl.FillColor = Color3.fromRGB(0, 116, 224)
                     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-                    hl.FillTransparency = 0.5
-                    hl.Parent = PreviewModel
+                    hl.FillTransparency = 0.45
+                    pcall(function() hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop end)
+                    hl.Parent = model
                 end
                 hl.Enabled = true
             elseif hl then
@@ -7899,15 +7914,19 @@ Library.Sections.ESPPreview = function(self, Data)
             end
         end
 
+        local col = Color3.fromRGB(255, 255, 255)
         if show and E.Rainbow then
-            local col = Color3.fromHSV((tick() * 0.5) % 1, 1, 1)
-            local stroke = Items["Box"] and Items["Box"].Instance:FindFirstChildOfClass("UIStroke")
-            if stroke then stroke.Color = col end
-            if Items["Corners"] then
-                for _, c in ipairs(Items["Corners"].Instance:GetChildren()) do
-                    if c:IsA("Frame") then c.BackgroundColor3 = col end
-                end
+            col = Color3.fromHSV((tick() * 0.5) % 1, 1, 1)
+        end
+        local stroke = Items["Box"] and Items["Box"].Instance and Items["Box"].Instance:FindFirstChildOfClass("UIStroke")
+        if stroke then stroke.Color = col end
+        if Items["Corners"] and Items["Corners"].Instance then
+            for _, c in ipairs(Items["Corners"].Instance:GetChildren()) do
+                if c:IsA("Frame") then c.BackgroundColor3 = col end
             end
+        end
+        if Items["NameLabel"] and Items["NameLabel"].Instance then
+            Items["NameLabel"].Instance.TextColor3 = col
         end
     end
 
@@ -8023,6 +8042,7 @@ Library.Sections.ESPPreview = function(self, Data)
         DisconnectAll()
 
         PreviewModel = Model
+        Preview._PreviewModel = Model
         Preview.Player = Model
 
         if not Model then
@@ -8032,6 +8052,8 @@ Library.Sections.ESPPreview = function(self, Data)
         local Viewmodel = Instance.new("Model")
         Viewmodel.Name = "Viewmodel"
         Viewmodel.Parent = Items["Viewport"].Instance
+        Preview._Viewmodel = Viewmodel
+        Preview._PreviewModel = Viewmodel
 
         for _, Object in ipairs(Model:GetDescendants()) do
             local Clone = self:AddObject(Object)
