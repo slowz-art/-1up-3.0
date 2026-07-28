@@ -7847,7 +7847,61 @@ Library.Sections.ESPPreview = function(self, Data)
         })
     end
 
-    Preview.ESP = {
+    
+        -- Skeleton stick-figure (2D overlay — ViewportFrame can't reliably show Beams)
+        Items["Skeleton"] = Instances:Create("Frame", {
+            Parent = Items["Overlay"].Instance,
+            Name = "\0",
+            BackgroundTransparency = 1,
+            Size = UDim2New(0.42, 0, 0.72, 0),
+            Position = UDim2New(0.29, 0, 0.14, 0),
+            Visible = false,
+            ZIndex = 52,
+            BorderSizePixel = 0
+        })
+        local function skLine(x0, y0, x1, y1, thick)
+            local dx, dy = x1 - x0, y1 - y0
+            local len = math.sqrt(dx * dx + dy * dy)
+            local midX, midY = (x0 + x1) / 2, (y0 + y1) / 2
+            local angle = math.deg(math.atan2(dy, dx))
+            local f = Instances:Create("Frame", {
+                Parent = Items["Skeleton"].Instance,
+                BackgroundColor3 = FromRGB(255, 255, 255),
+                BorderSizePixel = 0,
+                AnchorPoint = Vector2New(0.5, 0.5),
+                Position = UDim2New(midX, 0, midY, 0),
+                Size = UDim2New(len, 0, 0, thick or 2),
+                Rotation = angle,
+                ZIndex = 52
+            })
+            return f
+        end
+        -- Approximate R15 stick figure in normalized 0-1 box space
+        local joints = {
+            -- head
+            {0.5, 0.08, 0.5, 0.18},
+            -- neck to torso
+            {0.5, 0.18, 0.5, 0.28},
+            -- spine
+            {0.5, 0.28, 0.5, 0.55},
+            -- left arm
+            {0.5, 0.30, 0.22, 0.32},
+            {0.22, 0.32, 0.12, 0.48},
+            -- right arm
+            {0.5, 0.30, 0.78, 0.32},
+            {0.78, 0.32, 0.88, 0.48},
+            -- left leg
+            {0.5, 0.55, 0.38, 0.58},
+            {0.38, 0.58, 0.34, 0.88},
+            -- right leg
+            {0.5, 0.55, 0.62, 0.58},
+            {0.62, 0.58, 0.66, 0.88},
+        }
+        for _, L in ipairs(joints) do
+            skLine(L[1], L[2], L[3], L[4], 2)
+        end
+
+Preview.ESP = {
         Enabled = false,
         Box = false,
         Corner = false,
@@ -7889,28 +7943,43 @@ Library.Sections.ESPPreview = function(self, Data)
         setVis(Items["DistLabel"], show and E.Distance)
         setVis(Items["HealthBarBg"], show and E.Health)
         setVis(Items["HealthText"], show and E.HealthText)
+        setVis(Items["Skeleton"], show and E.Skeleton)
 
         if Items["Overlay"] and Items["Overlay"].Instance then
             Items["Overlay"].Instance.Visible = true
             Items["Overlay"].Instance.ZIndex = 50
         end
 
+        -- Chams: ViewportFrame ignores Highlight — tint BaseParts instead
         local model = Preview._Viewmodel or Preview._PreviewModel
+        Preview._ChamsCache = Preview._ChamsCache or {}
         if model then
-            local hl = model:FindFirstChild("_ESPChams")
             if show and E.Chams then
-                if not hl then
-                    hl = Instance.new("Highlight")
-                    hl.Name = "_ESPChams"
-                    hl.FillColor = Color3.fromRGB(0, 116, 224)
-                    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-                    hl.FillTransparency = 0.45
-                    pcall(function() hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop end)
-                    hl.Parent = model
+                local fill = E.Rainbow and Color3.fromHSV((tick() * 0.5) % 1, 1, 1) or Color3.fromRGB(0, 116, 224)
+                for _, part in ipairs(model:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        if not Preview._ChamsCache[part] then
+                            Preview._ChamsCache[part] = {
+                                Color = part.Color,
+                                Material = part.Material,
+                                Transparency = part.Transparency,
+                            }
+                        end
+                        part.Color = fill
+                        part.Material = Enum.Material.ForceField
+                        part.Transparency = 0.35
+                    end
                 end
-                hl.Enabled = true
-            elseif hl then
-                hl.Enabled = false
+            else
+                -- restore original look
+                for part, props in pairs(Preview._ChamsCache) do
+                    if part and part.Parent then
+                        part.Color = props.Color
+                        part.Material = props.Material
+                        part.Transparency = props.Transparency
+                    end
+                end
+                Preview._ChamsCache = {}
             end
         end
 
@@ -7922,6 +7991,11 @@ Library.Sections.ESPPreview = function(self, Data)
         if stroke then stroke.Color = col end
         if Items["Corners"] and Items["Corners"].Instance then
             for _, c in ipairs(Items["Corners"].Instance:GetChildren()) do
+                if c:IsA("Frame") then c.BackgroundColor3 = col end
+            end
+        end
+        if Items["Skeleton"] and Items["Skeleton"].Instance then
+            for _, c in ipairs(Items["Skeleton"].Instance:GetChildren()) do
                 if c:IsA("Frame") then c.BackgroundColor3 = col end
             end
         end
@@ -8072,6 +8146,11 @@ Library.Sections.ESPPreview = function(self, Data)
         table.insert(Connections, Model.DescendantRemoving:Connect(function(Object)
             self:RemoveObject(Object)
         end))
+
+        -- Re-apply chams/skeleton if user already toggled them
+        task.defer(function()
+            pcall(function() Preview:RefreshESPOverlay() end)
+        end)
     end
 
     Library:Connect(RunService.Heartbeat, function()
