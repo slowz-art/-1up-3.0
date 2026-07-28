@@ -2263,9 +2263,11 @@ local Library do
                 end
 
                 Items["Notification"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, 0, false, 0), {Size = UDim2New(0, Size.X, 0, Size.Y)})
-                Items["Accent"]:Tween(TweenInfo.new(Data.Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Size = UDim2New(1, 0, 0, 6)})
+                local Life = tonumber(Data.Duration) or 3
+                if Life < 0.5 then Life = 0.5 end
+                Items["Accent"]:Tween(TweenInfo.new(Life, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Size = UDim2New(1, 0, 0, 6)})
 
-                task.delay(Data.Duration + 0.15, function()
+                task.delay(Life + 0.15, function()
                     for Index, Value in Items do 
                         if Value.Instance:IsA("Frame") then
                             Value:Tween(nil, {BackgroundTransparency = 1})
@@ -4796,23 +4798,20 @@ local Library do
                 return Toggle.Value 
             end
 
-            function Toggle:Set(Value)
+            function Toggle:Set(Value, NoCallback)
                 Toggle.Value = Value 
                 Library.Flags[Toggle.Flag] = Value 
 
                 if Toggle.Value then 
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0, Size = UDim2New(1, 0, 1, 0)})
                     Items["CheckImage"]:Tween(nil, {ImageTransparency = 0, Size = UDim2New(0, 10, 0, 9)})
-
-                    --Items["Gradient"].Instance.Enabled = true 
                 else
                     Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time + 0.05, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
                     Items["CheckImage"]:Tween(nil, {ImageTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
-
-                    --Items["Gradient"].Instance.Enabled = false
                 end
 
-                if Toggle.Callback then 
+                -- Skip callback on initial Default apply so launch doesn't spam Notify
+                if not NoCallback and Toggle.Callback then 
                     Library:SafeCall(Toggle.Callback, Toggle.Value)
                 end
             end
@@ -5165,7 +5164,7 @@ local Library do
                 end
             end)
 
-            Toggle:Set(Toggle.Default)
+            Toggle:Set(Toggle.Default, true)
 
             Library.SetFlags[Toggle.Flag] = function(Value)
                 Toggle:Set(Value)
@@ -5588,7 +5587,7 @@ local Library do
             end)
 
             if Slider.Default then
-                Slider:Set(Slider.Default)
+                Slider:Set(Slider.Default, true)
             end
 
             Library.SetFlags[Slider.Flag] = function(Value)
@@ -8407,6 +8406,7 @@ function Library:Notify(Text, Duration, Title)
             Library:Notification({
                 Title = tostring(Title),
                 Description = tostring(Text),
+                Duration = tonumber(Duration) or 3,
                 Icon = "6031075938",
             })
         end)
@@ -8797,4 +8797,3 @@ end)
 
 getgenv().Library = Library
 return Library
-
