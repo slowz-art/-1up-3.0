@@ -1,4 +1,4 @@
----[[
+--[[
     1up UI Library — Linoria API
 
     Public API is Linoria:
@@ -8567,37 +8567,26 @@ function Library:_LinoriaBindGroupbox(Section)
     function Section:AddToggle(Idx, Info)
         Info = type(Info) == "table" and Info or {}
         local Name = Info.Text or Info.Name or tostring(Idx)
-        local default = Info.Default and true or false
 
-        local userCb = Info.Callback
         local Toggle = self:Toggle({
             Name     = Name,
             Flag     = tostring(Idx),
-            Default  = default,
-            Callback = function(v)
-                -- keep Linoria-style .Value in sync
-                local t = Toggles[Idx]
-                if t then t.Value = v and true or false end
-                if userCb then pcall(userCb, v) end
-            end,
+            Default  = Info.Default,
+            Callback = Info.Callback,
         })
 
         Toggle.Type = "Toggle"
         Toggle.Text = Name
-        Toggle.Value = default
 
         function Toggle:SetValue(Val)
-            Val = Val and true or false
-            self.Value = Val
             if self.Set then self:Set(Val) end
         end
         function Toggle:OnChanged(Cb)
-            local prev = userCb
-            userCb = function(v)
+            local prev = self.Callback
+            self.Callback = function(v)
                 if prev then pcall(prev, v) end
                 if Cb then pcall(Cb, v) end
             end
-            self.Callback = userCb
         end
 
         Toggles[Idx] = Toggle
@@ -8626,15 +8615,12 @@ function Library:_LinoriaBindGroupbox(Section)
         })
 
         Slider.Type = "Slider"
-        Slider.Value = Info.Default or Info.Min or 0
         function Slider:SetValue(Val)
-            self.Value = Val
             if self.Set then self:Set(Val) end
         end
         function Slider:OnChanged(Cb)
             local prev = self.Callback
             self.Callback = function(v)
-                self.Value = v
                 if prev then pcall(prev, v) end
                 if Cb then pcall(Cb, v) end
             end
