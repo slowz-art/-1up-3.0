@@ -2698,7 +2698,7 @@ local Library do
                     Visible = false,
                     ZIndex = 1,
                     BorderSizePixel = 0
-                })
+                }) -- never show name next to logo; cycle lives in top subtitle only
 
                 Items["SidebarDivider"] = Instances:Create("Frame", {
                     Parent = Items["LeftTabs"].Instance,
@@ -2754,7 +2754,7 @@ local Library do
                         BorderSizePixel = 0,
                         ZIndex = 4,
                         TextSize = 15,
-                        TextXAlignment = Enum.TextXAlignment.Left,
+                        TextXAlignment = Enum.TextXAlignment.Center,
                         TextTruncate = Enum.TextTruncate.AtEnd,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })
@@ -3194,12 +3194,23 @@ local Library do
                         BorderSizePixel = 0,
                         Position = UDim2New(0.8949604630470276, 0, 0.2945185601711273, 0),
                         Size = UDim2New(0, 245, 0, 159),
-                        ZIndex = 120,
+                        ZIndex = 200,
                         AutomaticSize = Enum.AutomaticSize.Y,
                         BackgroundColor3 = FromRGB(21, 21, 24),
                         BackgroundTransparency = 0
                     }) SettingsItems["Settings"]:AddToTheme({BackgroundColor3 = "Section Background 2"})
                     pcall(function() SettingsItems["Settings"].Instance.ClipsDescendants = true end)
+                    -- solid underlay so accent lines from main UI never show through
+                    Instances:Create("Frame", {
+                        Parent = SettingsItems["Settings"].Instance,
+                        Name = "\0",
+                        BackgroundColor3 = FromRGB(21, 21, 24),
+                        BackgroundTransparency = 0,
+                        Size = UDim2New(1, 0, 1, 0),
+                        Position = UDim2New(0, 0, 0, 0),
+                        ZIndex = 1,
+                        BorderSizePixel = 0
+                    }):AddToTheme({BackgroundColor3 = "Section Background 2"})
                     
                     Instances:Create("UICorner", {
                         Parent = SettingsItems["Settings"].Instance,
@@ -3343,6 +3354,16 @@ local Library do
     
                             SettingsItems["Settings"].Instance.Visible = true
                             SettingsItems["Settings"].Instance.Parent = Library.Holder.Instance
+                            SettingsItems["Settings"].Instance.ZIndex = 200
+                            SettingsItems["Settings"].Instance.BackgroundTransparency = 0
+                            SettingsItems["Settings"].Instance.ClipsDescendants = true
+                            for _, d in ipairs(SettingsItems["Settings"].Instance:GetDescendants()) do
+                                pcall(function()
+                                    if d:IsA("GuiObject") then
+                                        d.ZIndex = math.max(d.ZIndex or 1, 201)
+                                    end
+                                end)
+                            end
                             
                             RenderStepped = RunService.RenderStepped:Connect(function()
                                 SettingsItems["Settings"].Instance.Position = UDim2New(0, Items["SettingsIcon"].Instance.AbsolutePosition.X, 0, Items["SettingsIcon"].Instance.AbsolutePosition.Y + Items["SettingsButton"].Instance.AbsoluteSize.Y + 108)
