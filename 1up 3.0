@@ -2331,7 +2331,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(1, 0),
                     BackgroundTransparency = 0.15,
-                    Size = UDim2New(0, 168, 1, 0),
+                    Size = UDim2New(0, 140, 1, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
@@ -2384,7 +2384,7 @@ local Library do
                 -- Collapsible sidebar: icons-only when collapsed, full labels when expanded
                 Window.SidebarCollapsed = false
                 Window._SidebarExpandedWidth = 180
-                Window._SidebarCollapsedWidth = 84
+                Window._SidebarCollapsedWidth = 78
                 Window._SidebarHoverOpen = false
 
                 local function SetSidebarTabTexts(Visible)
@@ -2420,17 +2420,8 @@ local Library do
                         { Size = UDim2New(0, width, 1, 0) }
                     )
                     SetSidebarTabTexts(not Window.SidebarCollapsed)
-                    -- fit logo: centered icon strip when collapsed, left-aligned when expanded
                     if Items["Logo"] and Items["Logo"].Instance then
-                        if Window.SidebarCollapsed then
-                            Items["Logo"].Instance.Size = UDim2New(0, 40, 0, 40)
-                            Items["Logo"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
-                            Items["Logo"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
-                        else
-                            Items["Logo"].Instance.Size = UDim2New(0, 84, 0, 84)
-                            Items["Logo"].Instance.Position = UDim2New(0, 0, 0.5, 0)
-                            Items["Logo"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                        end
+                        ApplyLogoLayout(not Window.SidebarCollapsed)
                     end
                 end
 
@@ -2442,14 +2433,13 @@ local Library do
                 -- Mobile: no hover — tap sidebar expands, tap content collapses
                 local function ApplyLogoLayout(Expanded)
                     if not (Items["Logo"] and Items["Logo"].Instance) then return end
+                    -- always centered; bigger when expanded, still readable when collapsed
+                    Items["Logo"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
+                    Items["Logo"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
                     if Expanded then
-                        Items["Logo"].Instance.Size = UDim2New(0, 84, 0, 84)
-                        Items["Logo"].Instance.Position = UDim2New(0, 0, 0.5, 0)
-                        Items["Logo"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                        Items["Logo"].Instance.Size = UDim2New(0, 100, 0, 100)
                     else
-                        Items["Logo"].Instance.Size = UDim2New(0, 40, 0, 40)
-                        Items["Logo"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
-                        Items["Logo"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
+                        Items["Logo"].Instance.Size = UDim2New(0, 56, 0, 56)
                     end
                 end
 
@@ -2661,24 +2651,25 @@ local Library do
                     Parent = Items["LeftTabs"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 100),
+                    Size = UDim2New(1, 0, 0, 120),
                     BorderSizePixel = 0,
                     ZIndex = 3,
                     LayoutOrder = -100,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
+                -- Logo only (no text — logo already says "1 UP")
                 Items["Logo"] = Instances:Create("ImageLabel", {
                     Parent = Items["SidebarHeader"].Instance,
                     Name = "\0",
                     ImageColor3 = FromRGB(255, 255, 255),
                     ScaleType = Enum.ScaleType.Fit,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 84, 0, 84),
+                    Size = UDim2New(0, 100, 0, 100),
                     Image = "rbxassetid://" .. tostring(Window.Logo):gsub("rbxassetid://", ""),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 0, 0.5, 0),
-                    AnchorPoint = Vector2New(0, 0.5),
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    AnchorPoint = Vector2New(0.5, 0.5),
                     ZIndex = 4,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
@@ -2694,25 +2685,17 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
 
-                -- Short brand name next to logo in sidebar (e.g. "1 UP")
+                -- Title kept as no-op stub so old code paths don't error (hidden)
                 Items["Title"] = Instances:Create("TextLabel", {
                     Parent = Items["SidebarHeader"].Instance,
                     Name = "SidebarTitle",
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(240, 240, 240),
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    Text = Window.Name,
-                    Size = UDim2New(1, -80, 0, 22),
+                    Text = "",
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 78, 0.5, 0),
-                    AnchorPoint = Vector2New(0, 0.5),
-                    BorderSizePixel = 0,
-                    ZIndex = 4,
-                    TextSize = 18,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    TextTruncate = Enum.TextTruncate.AtEnd,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
+                    Size = UDim2New(0, 0, 0, 0),
+                    Visible = false,
+                    ZIndex = 1,
+                    BorderSizePixel = 0
+                })
 
                 Items["SidebarDivider"] = Instances:Create("Frame", {
                     Parent = Items["LeftTabs"].Instance,
@@ -2725,7 +2708,7 @@ local Library do
                     LayoutOrder = -99
                 })  Items["SidebarDivider"]:AddToTheme({BackgroundColor3 = "Outline"})
 
-                -- Main window top title (original spot) — e.g. "Project X | DUELIST"
+                -- Main window top title (original spot) — "Project X | DUELIST"
                 Items["MainTitle"] = Instances:Create("TextLabel", {
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
@@ -2743,7 +2726,6 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["MainTitle"]:AddToTheme({TextColor3 = "Text"})
 
-                -- keep SubTitle alias for older code paths
                 Items["SubTitle"] = Items["MainTitle"]
 
                 Items["Content"] = Instances:Create("Frame", {
