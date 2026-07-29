@@ -8730,7 +8730,8 @@ function Library:_LinoriaBindGroupbox(Section)
         return Btn
     end
 
-    function Section:AddLabel(Text)
+    function Section:AddLabel(Text, _DoesWrap)
+        -- Linoria: AddLabel(Text) or AddLabel(Text, true) for wrap — second arg ignored safely
         local L = self:Label(tostring(Text or ""))
         L.Type = "Label"
         L.Section = self
