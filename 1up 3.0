@@ -7862,13 +7862,12 @@ Library.Sections.Tabbox = function(self, Data)
             Library:_LinoriaBindGroupbox(Tab)
         end
 
-        if #Tabbox.Tabs == 0 then
-            task.defer(function()
-                Tab:Show()
-            end)
+        table.insert(Tabbox.Tabs, Tab)
+
+        if #Tabbox.Tabs == 1 then
+            Tab:Show()
         end
 
-        table.insert(Tabbox.Tabs, Tab)
         return Tab
     end
 
@@ -8668,11 +8667,17 @@ function Library:_LinoriaBindGroupbox(Section)
             if ok then values = list end
         end
 
+        -- Linoria uses Default = 1 (index); 1up Dropdown expects value
+        local def = Info.Default
+        if type(def) == "number" and type(values) == "table" then
+            def = values[def] or values[1]
+        end
+
         local Drop = self:Dropdown({
             Name     = Name,
             Flag     = tostring(Idx),
             Items    = values,
-            Default  = Info.Default,
+            Default  = def,
             Multi    = Info.Multi,
             Callback = Info.Callback,
         })
