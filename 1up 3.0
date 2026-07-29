@@ -2292,7 +2292,6 @@ local Library do
                 Name = Data.Name or Data.name or "Window",
                 SubName = Data.SubName or Data.subname or "Fine-tuning for sure wins",
                 Logo = Data.Logo or Data.logo or "1l20959262762131",
-                TitleWords = Data.TitleWords or Data.Words,
                 
                 Pages = { },
                 Items = { },
@@ -2330,15 +2329,13 @@ local Library do
                     Name = "\0",
                     Visible = true,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    AnchorPoint = Vector2New(0, 0),
-                    Position = UDim2New(0, 0, 0, 0),
-                    BackgroundTransparency = 0.05,
-                    Size = UDim2New(0, 140, 1, 0),
-                    ZIndex = 5,
+                    AnchorPoint = Vector2New(1, 0),
+                    BackgroundTransparency = 0.15,
+                    Size = UDim2New(0, 190, 1, 0),
+                    ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
-                Items["LeftTabs"].Instance.ClipsDescendants = true
 
                 pcall(function() Library:MakeBlurred(Items["LeftTabs"], Window) end)
 
@@ -2386,7 +2383,7 @@ local Library do
                 -- Collapsible sidebar: icons-only when collapsed, full labels when expanded
                 Window.SidebarCollapsed = false
                 Window._SidebarExpandedWidth = 180
-                Window._SidebarCollapsedWidth = 78
+                Window._SidebarCollapsedWidth = 84
                 Window._SidebarHoverOpen = false
 
                 local function SetSidebarTabTexts(Visible)
@@ -2421,20 +2418,7 @@ local Library do
                         TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
                         { Size = UDim2New(0, width, 1, 0) }
                     )
-                    -- keep content flush to sidebar edge so accent never draws over main UI / settings
-                    if Items["Content"] and Items["Content"].Instance then
-                        Items["Content"]:Tween(
-                            TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-                            {
-                                Position = UDim2New(0, width, 0, 55),
-                                Size = UDim2New(1, -width, 1, -55)
-                            }
-                        )
-                    end
                     SetSidebarTabTexts(not Window.SidebarCollapsed)
-                    if Items["Logo"] and Items["Logo"].Instance then
-                        ApplyLogoLayout(not Window.SidebarCollapsed)
-                    end
                 end
 
                 function Window:ToggleSidebar()
@@ -2443,35 +2427,15 @@ local Library do
 
                 -- Desktop: hover expands when collapsed
                 -- Mobile: no hover — tap sidebar expands, tap content collapses
-                local function ApplyLogoLayout(Expanded)
-                    if not (Items["Logo"] and Items["Logo"].Instance) then return end
-                    -- always centered; bigger when expanded, still readable when collapsed
-                    Items["Logo"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
-                    Items["Logo"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
-                    if Expanded then
-                        Items["Logo"].Instance.Size = UDim2New(0, 100, 0, 100)
-                    else
-                        Items["Logo"].Instance.Size = UDim2New(0, 56, 0, 56)
-                    end
-                end
-
                 Items["LeftTabs"]:Connect("MouseEnter", function()
                     if IsMobile then return end
                     Window._SidebarHoverOpen = true
                     if Window.SidebarCollapsed then
-                        local w = Window._SidebarExpandedWidth
                         Items["LeftTabs"]:Tween(
                             TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-                            { Size = UDim2New(0, w, 1, 0) }
+                            { Size = UDim2New(0, Window._SidebarExpandedWidth, 1, 0) }
                         )
-                        if Items["Content"] and Items["Content"].Instance then
-                            Items["Content"]:Tween(
-                                TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-                                { Position = UDim2New(0, w, 0, 55), Size = UDim2New(1, -w, 1, -55) }
-                            )
-                        end
                         SetSidebarTabTexts(true)
-                        ApplyLogoLayout(true)
                     end
                 end)
 
@@ -2481,19 +2445,11 @@ local Library do
                     if Window.SidebarCollapsed then
                         task.delay(0.12, function()
                             if Window.SidebarCollapsed and not Window._SidebarHoverOpen then
-                                local w = Window._SidebarCollapsedWidth
                                 Items["LeftTabs"]:Tween(
                                     TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-                                    { Size = UDim2New(0, w, 1, 0) }
+                                    { Size = UDim2New(0, Window._SidebarCollapsedWidth, 1, 0) }
                                 )
-                                if Items["Content"] and Items["Content"].Instance then
-                                    Items["Content"]:Tween(
-                                        TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-                                        { Position = UDim2New(0, w, 0, 55), Size = UDim2New(1, -w, 1, -55) }
-                                    )
-                                end
                                 SetSidebarTabTexts(false)
-                                ApplyLogoLayout(false)
                             end
                         end)
                     end
@@ -2677,25 +2633,24 @@ local Library do
                     Parent = Items["LeftTabs"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 120),
+                    Size = UDim2New(1, 0, 0, 92),
                     BorderSizePixel = 0,
                     ZIndex = 3,
                     LayoutOrder = -100,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
-                -- Logo only (no text — logo already says "1 UP")
                 Items["Logo"] = Instances:Create("ImageLabel", {
                     Parent = Items["SidebarHeader"].Instance,
                     Name = "\0",
                     ImageColor3 = FromRGB(255, 255, 255),
                     ScaleType = Enum.ScaleType.Fit,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 100, 0, 100),
+                    Size = UDim2New(0, 78, 0, 78),
                     Image = "rbxassetid://" .. tostring(Window.Logo):gsub("rbxassetid://", ""),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0.5, 0, 0.5, 0),
-                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Position = UDim2New(0, 0, 0.5, 0),
+                    AnchorPoint = Vector2New(0, 0.5),
                     ZIndex = 4,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
@@ -2711,17 +2666,25 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
 
-                -- Title kept as no-op stub so old code paths don't error (hidden)
+                -- Short brand name next to logo in sidebar (e.g. "1 UP")
                 Items["Title"] = Instances:Create("TextLabel", {
                     Parent = Items["SidebarHeader"].Instance,
                     Name = "SidebarTitle",
-                    Text = "",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(240, 240, 240),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = Window.Name,
+                    Size = UDim2New(1, -80, 0, 22),
                     BackgroundTransparency = 1,
-                    Size = UDim2New(0, 0, 0, 0),
-                    Visible = false,
-                    ZIndex = 1,
-                    BorderSizePixel = 0
-                })
+                    Position = UDim2New(0, 78, 0.5, 0),
+                    AnchorPoint = Vector2New(0, 0.5),
+                    BorderSizePixel = 0,
+                    ZIndex = 4,
+                    TextSize = 17,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextTruncate = Enum.TextTruncate.AtEnd,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
 
                 Items["SidebarDivider"] = Instances:Create("Frame", {
                     Parent = Items["LeftTabs"].Instance,
@@ -2734,102 +2697,38 @@ local Library do
                     LayoutOrder = -99
                 })  Items["SidebarDivider"]:AddToTheme({BackgroundColor3 = "Outline"})
 
-                -- Main window top title (original spot) — "Project X | DUELIST"
-                -- Cycling title in top bar (slides through words)
-                Items["TitleContainer"] = Instances:Create("Frame", {
+                -- Main window top title (original spot) — e.g. "Project X | DUELIST"
+                Items["MainTitle"] = Instances:Create("TextLabel", {
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(240, 240, 240),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = (Window.SubName and Window.SubName ~= "" and Window.SubName) or Window.Name,
+                    AutomaticSize = Enum.AutomaticSize.X,
+                    Size = UDim2New(0, 0, 0, 15),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 14, 0, 10),
-                    Size = UDim2New(1, -120, 0, 28),
+                    Position = UDim2New(0, 14, 0, 16),
                     BorderSizePixel = 0,
-                    ZIndex = 3,
-                    ClipsDescendants = true,
+                    ZIndex = 2,
+                    TextSize = 16,
                     BackgroundColor3 = FromRGB(255, 255, 255)
-                })
-                pcall(function() Items["TitleContainer"].Instance.ClipsDescendants = true end)
+                })  Items["MainTitle"]:AddToTheme({TextColor3 = "Text"})
 
-                local TitleWords = Window.TitleWords
-                if type(TitleWords) ~= "table" or #TitleWords == 0 then
-                    local base = (Window.SubName and Window.SubName ~= "" and Window.SubName) or Window.Name or "Project X"
-                    TitleWords = {
-                        base,
-                        "On top",
-                        "Best Auto dupe",
-                        "And universal",
-                        "Script",
-                        "7+ games",
-                        "supported",
-                    }
-                end
-
-                local function MakeTitleLabel(Text, Pos)
-                    local L = Instances:Create("TextLabel", {
-                        Parent = Items["TitleContainer"].Instance,
-                        Name = "\0",
-                        FontFace = Library.Font,
-                        TextColor3 = FromRGB(240, 240, 240),
-                        BorderColor3 = FromRGB(0, 0, 0),
-                        Text = tostring(Text),
-                        Size = UDim2New(1, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        Position = Pos or UDim2New(0, 0, 0, 0),
-                        BorderSizePixel = 0,
-                        ZIndex = 4,
-                        TextSize = 15,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        TextTruncate = Enum.TextTruncate.AtEnd,
-                        BackgroundColor3 = FromRGB(255, 255, 255)
-                    })
-                    L:AddToTheme({TextColor3 = "Text"})
-                    return L
-                end
-
-                local CurrentTitleLabel = MakeTitleLabel(TitleWords[1], UDim2New(0, 0, 0, 0))
-                Items["MainTitle"] = CurrentTitleLabel
-                Items["SubTitle"] = CurrentTitleLabel
-
-                task.spawn(function()
-                    local idx = 1
-                    local container = Items["TitleContainer"] and Items["TitleContainer"].Instance
-                    while container and container.Parent do
-                        task.wait(1.6)
-                        if not (container and container.Parent) then break end
-                        local nextIdx = idx + 1
-                        if nextIdx > #TitleWords then nextIdx = 1 end
-                        local nextLabel = MakeTitleLabel(TitleWords[nextIdx], UDim2New(1, 0, 0, 0))
-                        local ti = TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-                        pcall(function()
-                            CurrentTitleLabel:Tween(ti, { Position = UDim2New(-1, 0, 0, 0) })
-                            nextLabel:Tween(ti, { Position = UDim2New(0, 0, 0, 0) })
-                        end)
-                        task.wait(0.5)
-                        pcall(function()
-                            if CurrentTitleLabel and CurrentTitleLabel.Instance then
-                                CurrentTitleLabel.Instance:Destroy()
-                            end
-                        end)
-                        CurrentTitleLabel = nextLabel
-                        Items["MainTitle"] = CurrentTitleLabel
-                        Items["SubTitle"] = CurrentTitleLabel
-                        idx = nextIdx
-                    end
-                end)
-
-                
+                -- keep SubTitle alias for older code paths
+                Items["SubTitle"] = Items["MainTitle"]
 
                 Items["Content"] = Instances:Create("Frame", {
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
-                    BackgroundTransparency = 0.08,
-                    Position = UDim2New(0, 140, 0, 55),
-                    Size = UDim2New(1, -140, 1, -55),
+                    BackgroundTransparency = 0.75,
+                    Position = UDim2New(0, 0, 0, 55),
+                    Size = UDim2New(1, 0, 1, -55),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["Content"]:AddToTheme({BackgroundColor3 = "Background"})
-                pcall(function() Items["Content"].Instance.ClipsDescendants = true end)
 
                 Items["CloseButton"] = Instances:Create("TextButton", {
                     Parent = Items["MainFrame"].Instance,
@@ -3217,12 +3116,10 @@ local Library do
                         BorderSizePixel = 0,
                         Position = UDim2New(0.8949604630470276, 0, 0.2945185601711273, 0),
                         Size = UDim2New(0, 245, 0, 159),
-                        ZIndex = 120,
+                        ZIndex = 2,
                         AutomaticSize = Enum.AutomaticSize.Y,
-                        BackgroundColor3 = FromRGB(21, 21, 24),
-                        BackgroundTransparency = 0
+                        BackgroundColor3 = FromRGB(21, 21, 24)
                     }) SettingsItems["Settings"]:AddToTheme({BackgroundColor3 = "Section Background 2"})
-                    pcall(function() SettingsItems["Settings"].Instance.ClipsDescendants = true end)
                     
                     Instances:Create("UICorner", {
                         Parent = SettingsItems["Settings"].Instance,
@@ -3768,7 +3665,7 @@ local Library do
                     AutoButtonColor = false,
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 40),
+                    Size = UDim2New(0, 135, 0, 40),
                     ZIndex = 2,
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(124, 163, 255)
@@ -8873,7 +8770,6 @@ function Library:CreateWindow(Cfg)
         Name    = Cfg.Title or Cfg.Name or Cfg.name or "Window",
         SubName = Cfg.SubTitle or Cfg.SubName or Cfg.Subtitle or "",
         Logo    = Cfg.Logo or Cfg.logo,
-        TitleWords = Cfg.TitleWords or Cfg.Words,
     })
 
     -- Window:AddTab("Name")  →  1up Window:Page({ Name = "Name" })
