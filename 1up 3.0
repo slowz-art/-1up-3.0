@@ -7837,13 +7837,20 @@ Library.Sections.Tabbox = function(self, Data)
 
         function Tab:Show()
             for _, t in pairs(Tabbox.Tabs) do
-                t.Items["Content"].Instance.Visible = false
-                t.Underline:Tween(nil, { BackgroundTransparency = 1 })
-                t.Button:Tween(nil, { TextColor3 = Library.Theme.Text })
+                if t.Items and t.Items["Content"] then
+                    t.Items["Content"].Instance.Visible = false
+                end
+                pcall(function()
+                    t.Underline:Tween(nil, { BackgroundTransparency = 1 })
+                    t.Button:Tween(nil, { TextColor3 = Library.Theme.Text })
+                end)
             end
             Content.Instance.Visible = true
-            Underline:Tween(nil, { BackgroundTransparency = 0 })
-            Button:Tween(nil, { TextColor3 = Library.Theme.Accent })
+            Content.Instance.BackgroundTransparency = 1
+            pcall(function()
+                Underline:Tween(nil, { BackgroundTransparency = 0 })
+                Button:Tween(nil, { TextColor3 = Library.Theme.Accent })
+            end)
             Tabbox.CurrentTab = Tab
         end
 
@@ -8726,6 +8733,9 @@ function Library:_LinoriaBindGroupbox(Section)
     function Section:AddLabel(Text)
         local L = self:Label(tostring(Text or ""))
         L.Type = "Label"
+        L.Section = self
+        L.Window = self.Window
+        L.Page = self.Page
 
         function L:AddColorPicker(Idx, Info)
             Info = type(Info) == "table" and Info or {}
