@@ -350,7 +350,7 @@ local Library do
                 local TransparencyProperty = Tween:GetProperty(Value)
 
                 if not TransparencyProperty then 
-                    continue
+                    goto __c0
                 end
 
                 if type(TransparencyProperty) == "table" then 
@@ -360,6 +360,7 @@ local Library do
                 else
                     NewTween = Tween:FadeItem(Value, TransparencyProperty, not Visibility, Speed)
                 end
+                ::__c0::
             end
         end
 
@@ -883,7 +884,7 @@ local Library do
                 local SetFunction = Library.SetFlags[Index]
 
                 if not SetFunction then
-                    continue
+                    goto __c1
                 end
 
                 if type(Value) == "table" and Value.Key then 
@@ -893,6 +894,7 @@ local Library do
                 else
                     SetFunction(Value)
                 end
+                ::__c1::
             end
         end)
 
@@ -1646,7 +1648,7 @@ local Library do
                     local TransparencyProperty = Tween:GetProperty(Value)
 
                     if not TransparencyProperty then
-                        continue 
+                        goto __c2
                     end
 
                     if not Value.ClassName:find("UI") then 
@@ -1660,6 +1662,7 @@ local Library do
                     else
                         NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
                     end
+                    ::__c2::
                 end
                 
                 NewTween.Tween.Completed:Connect(function()
@@ -2402,7 +2405,7 @@ local Library do
                     for _, child in ipairs(left:GetChildren()) do
                         if child:IsA("TextButton") or child:IsA("Frame") then
                             if Items["SidebarHeader"] and child == Items["SidebarHeader"].Instance then
-                                continue
+                                goto __c3
                             end
                             for _, d in ipairs(child:GetDescendants()) do
                                 if d:IsA("TextLabel") then
@@ -2410,6 +2413,7 @@ local Library do
                                 end
                             end
                         end
+                        ::__c3::
                     end
                 end
 
@@ -3401,7 +3405,7 @@ local Library do
                             local TransparencyProperty = Tween:GetProperty(Value)
         
                             if not TransparencyProperty then
-                                continue 
+                                goto __c4
                             end
         
                             if not Value.ClassName:find("UI") then 
@@ -3416,6 +3420,7 @@ local Library do
                             else
                                 NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
                             end
+                            ::__c4::
                         end
                         
                         NewTween.Tween.Completed:Connect(function()
@@ -3530,7 +3535,7 @@ local Library do
                     local TransparencyProperty = Tween:GetProperty(Value)
 
                     if not TransparencyProperty then
-                        continue 
+                        goto __c5
                     end
 
                     if type(TransparencyProperty) == "table" then 
@@ -3540,6 +3545,7 @@ local Library do
                     else
                         NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
                     end
+                    ::__c5::
                 end
                 
                 if NewTween and NewTween.Tween then
@@ -3923,7 +3929,7 @@ local Library do
                     local TransparencyProperty = Tween:GetProperty(Value)
 
                     if not TransparencyProperty then 
-                        continue
+                        goto __c6
                     end
 
                     if type(TransparencyProperty) == "table" then 
@@ -3933,6 +3939,7 @@ local Library do
                     else
                         NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
                     end
+                    ::__c6::
                 end
 
                 Library:Connect(NewTween.Tween.Completed, function()
@@ -4513,10 +4520,11 @@ local Library do
 
             for Index, Value in Items["GlobalChat"].Instance:GetDescendants() do 
                 if Value.ClassName:find("UI") then 
-                    continue 
+                    goto __c7
                 end
 
                 Value.ZIndex = 2
+                ::__c7::
             end
 
             Items["GlobalChat"].Instance.ZIndex = 2
@@ -5297,7 +5305,7 @@ local Library do
                         local TransparencyProperty = Tween:GetProperty(Value)
     
                         if not TransparencyProperty then
-                            continue 
+                            goto __c8
                         end
     
                         if not Value.ClassName:find("UI") then 
@@ -5311,6 +5319,7 @@ local Library do
                         else
                             NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
                         end
+                        ::__c8::
                     end
                     
                     NewTween.Tween.Completed:Connect(function()
@@ -6152,7 +6161,7 @@ local Library do
                     local TransparencyProperty = Tween:GetProperty(Value)
 
                     if not TransparencyProperty then
-                        continue 
+                        goto __c9
                     end
 
                     if not Value.ClassName:find("UI") then 
@@ -6166,6 +6175,7 @@ local Library do
                     else
                         NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
                     end
+                    ::__c9::
                 end
                 
                 NewTween.Tween.Completed:Connect(function()
@@ -6189,11 +6199,12 @@ local Library do
                         local OptionData = Dropdown.Options[Value]
                          
                         if not OptionData then
-                            continue
+                            goto __c10
                         end
 
                         OptionData.Selected = true 
                         OptionData:Toggle("Active")
+                        ::__c10::
                     end
 
                     Items["Value"].Instance.Text = TableConcat(Option, ", ")
@@ -7004,7 +7015,7 @@ local Library do
                         end
 
                         Items["KeyButton"].Instance.Text = Count == 1 and "." or Count == 2 and ".." or Count == 3 and "..."
-                        Count += 1
+                        Count = Count + 1
                         task.wait(0.35)
                     end
                 end)
@@ -7413,11 +7424,12 @@ local Library do
                         local OptionData = Dropdown.Options[Value]
                          
                         if not OptionData then
-                            continue
+                            goto __c11
                         end
 
                         OptionData.Selected = true 
                         OptionData:Toggle("Active")
+                        ::__c11::
                     end
                 else
                     if not Dropdown.Options[Option] then
