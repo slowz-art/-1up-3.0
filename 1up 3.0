@@ -349,7 +349,9 @@ local Library do
             for Index, Value in Descendants do 
                 local TransparencyProperty = Tween:GetProperty(Value)
 
-                if TransparencyProperty then
+                if not TransparencyProperty then 
+                    continue
+                end
 
                 if type(TransparencyProperty) == "table" then 
                     for _, Property in TransparencyProperty do 
@@ -357,7 +359,6 @@ local Library do
                     end
                 else
                     NewTween = Tween:FadeItem(Value, TransparencyProperty, not Visibility, Speed)
-                end
                 end
             end
         end
@@ -881,7 +882,9 @@ local Library do
             for Index, Value in Decoded do 
                 local SetFunction = Library.SetFlags[Index]
 
-                if SetFunction then
+                if not SetFunction then
+                    continue
+                end
 
                 if type(Value) == "table" and Value.Key then 
                     SetFunction(Value)
@@ -889,7 +892,6 @@ local Library do
                     SetFunction(Value.Color, Value.Alpha)
                 else
                     SetFunction(Value)
-                end
                 end
             end
         end)
@@ -1643,11 +1645,12 @@ local Library do
                 for Index, Value in Descendants do 
                     local TransparencyProperty = Tween:GetProperty(Value)
 
-                    if TransparencyProperty then
+                    if not TransparencyProperty then
+                        continue 
+                    end
 
                     if not Value.ClassName:find("UI") then 
                         Value.ZIndex = (Colorpicker.IsOpen and Data.Section.IsSettings and 9) or (Colorpicker.IsOpen and not Data.Section.IsSettings and 3) or 1
-                    end
                     end
 
                     if type(TransparencyProperty) == "table" then 
@@ -2398,12 +2401,13 @@ local Library do
 
                     for _, child in ipairs(left:GetChildren()) do
                         if child:IsA("TextButton") or child:IsA("Frame") then
-                            if not (Items["SidebarHeader"] and child == Items["SidebarHeader"].Instance) then
+                            if Items["SidebarHeader"] and child == Items["SidebarHeader"].Instance then
+                                continue
+                            end
                             for _, d in ipairs(child:GetDescendants()) do
                                 if d:IsA("TextLabel") then
                                     d.TextTransparency = Visible and 0 or 1
                                 end
-                            end
                             end
                         end
                     end
@@ -3396,12 +3400,13 @@ local Library do
                         for Index, Value in Descendants do 
                             local TransparencyProperty = Tween:GetProperty(Value)
         
-                            if TransparencyProperty then
+                            if not TransparencyProperty then
+                                continue 
+                            end
         
                             if not Value.ClassName:find("UI") then 
                                 Value.ZIndex = Settings.IsOpen and 7 or 1
                                 SettingsItems["Text"].Instance.ZIndex = 8
-                            end
                             end
         
                             if type(TransparencyProperty) == "table" then 
@@ -3524,7 +3529,9 @@ local Library do
                 for Index, Value in Descendants do 
                     local TransparencyProperty = Tween:GetProperty(Value)
 
-                    if TransparencyProperty then
+                    if not TransparencyProperty then
+                        continue 
+                    end
 
                     if type(TransparencyProperty) == "table" then 
                         for _, Property in TransparencyProperty do 
@@ -3532,7 +3539,6 @@ local Library do
                         end
                     else
                         NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                    end
                     end
                 end
                 
@@ -3916,7 +3922,9 @@ local Library do
                 for Index, Value in AllInstances do 
                     local TransparencyProperty = Tween:GetProperty(Value)
 
-                    if TransparencyProperty then
+                    if not TransparencyProperty then 
+                        continue
+                    end
 
                     if type(TransparencyProperty) == "table" then 
                         for _, Property in TransparencyProperty do 
@@ -3924,7 +3932,6 @@ local Library do
                         end
                     else
                         NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                    end
                     end
                 end
 
@@ -4505,10 +4512,11 @@ local Library do
             end)
 
             for Index, Value in Items["GlobalChat"].Instance:GetDescendants() do 
-                if not (Value.ClassName:find("UI")) then
+                if Value.ClassName:find("UI") then 
+                    continue 
+                end
 
                 Value.ZIndex = 2
-                end
             end
 
             Items["GlobalChat"].Instance.ZIndex = 2
@@ -5288,11 +5296,12 @@ local Library do
                     for Index, Value in Descendants do 
                         local TransparencyProperty = Tween:GetProperty(Value)
     
-                        if TransparencyProperty then
+                        if not TransparencyProperty then
+                            continue 
+                        end
     
                         if not Value.ClassName:find("UI") then 
                             Value.ZIndex = Settings.IsOpen and 7 or 1
-                        end
                         end
     
                         if type(TransparencyProperty) == "table" then 
@@ -6142,11 +6151,12 @@ local Library do
                 for Index, Value in Descendants do 
                     local TransparencyProperty = Tween:GetProperty(Value)
 
-                    if TransparencyProperty then
+                    if not TransparencyProperty then
+                        continue 
+                    end
 
                     if not Value.ClassName:find("UI") then 
                         Value.ZIndex = (Dropdown.IsOpen and Dropdown.Section.IsSettings and 8) or (Dropdown.IsOpen and 3) or 1
-                    end
                     end
 
                     if type(TransparencyProperty) == "table" then 
@@ -6178,11 +6188,12 @@ local Library do
                     for Index, Value in Option do
                         local OptionData = Dropdown.Options[Value]
                          
-                        if OptionData then
+                        if not OptionData then
+                            continue
+                        end
 
                         OptionData.Selected = true 
                         OptionData:Toggle("Active")
-                        end
                     end
 
                     Items["Value"].Instance.Text = TableConcat(Option, ", ")
@@ -6993,7 +7004,7 @@ local Library do
                         end
 
                         Items["KeyButton"].Instance.Text = Count == 1 and "." or Count == 2 and ".." or Count == 3 and "..."
-                        Count = Count + 1
+                        Count += 1
                         task.wait(0.35)
                     end
                 end)
@@ -7401,11 +7412,12 @@ local Library do
                     for Index, Value in Option do
                         local OptionData = Dropdown.Options[Value]
                          
-                        if OptionData then
+                        if not OptionData then
+                            continue
+                        end
 
                         OptionData.Selected = true 
                         OptionData:Toggle("Active")
-                        end
                     end
                 else
                     if not Dropdown.Options[Option] then
