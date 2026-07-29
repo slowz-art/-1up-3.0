@@ -8589,6 +8589,13 @@ function Library:_LinoriaBindGroupbox(Section)
             end
         end
 
+        function Toggle:SetStateEnabled(Enabled)
+            self.Disabled = not Enabled
+            pcall(function()
+                if self.SetDisabled then self:SetDisabled(not Enabled) end
+            end)
+        end
+
         Toggles[Idx] = Toggle
         return Toggle
     end
@@ -8867,12 +8874,18 @@ end
 function Library:CreateWindow(Cfg)
     Cfg = type(Cfg) == "table" and Cfg or {}
 
-    local Win = self:Window({
-        Name    = Cfg.Title or Cfg.Name or Cfg.name or "Window",
-        SubName = Cfg.SubTitle or Cfg.SubName or Cfg.Subtitle or "",
-        Logo    = Cfg.Logo or Cfg.logo,
-        TitleWords = Cfg.TitleWords or Cfg.Words,
-    })
+    local winOk, Win = pcall(function()
+        return self:Window({
+            Name    = Cfg.Title or Cfg.Name or Cfg.name or "Window",
+            SubName = Cfg.SubTitle or Cfg.SubName or Cfg.Subtitle or "",
+            Logo    = Cfg.Logo or Cfg.logo,
+            TitleWords = Cfg.TitleWords or Cfg.Words,
+        })
+    end)
+    if not winOk or not Win then
+        warn("[CreateWindow] Window failed:", Win)
+        return nil
+    end
 
     -- Window:AddTab("Name")  →  1up Window:Page({ Name = "Name" })
     function Win:AddTab(Name, Icon)
