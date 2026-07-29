@@ -2379,6 +2379,139 @@ local Library do
                         end)
                     end
                 end)
+
+                -- Collapsible sidebar: icons-only when collapsed, full labels when expanded
+                Window.SidebarCollapsed = false
+                Window._SidebarExpandedWidth = 160
+                Window._SidebarCollapsedWidth = 52
+                Window._SidebarHoverOpen = false
+
+                local function SetSidebarTabTexts(Visible)
+                    local left = Items["LeftTabs"] and Items["LeftTabs"].Instance
+                    if not left then return end
+                    for _, child in ipairs(left:GetDescendants()) do
+                        if child:IsA("TextLabel") and child.Name ~= "\0" then
+                            -- page tab name labels sit next to icons
+                        end
+                        if child:IsA("TextLabel") then
+                            local parent = child.Parent
+                            -- hide tab name labels (not category headers necessarily)
+                            if parent and parent:IsA("TextButton") then
+                                child.Visible = Visible
+                            end
+                        end
+                    end
+                    -- also toggle by scanning Inactive tab buttons' Text children
+                    for _, child in ipairs(left:GetChildren()) do
+                        if child:IsA("TextButton") or child:IsA("Frame") then
+                            for _, d in ipairs(child:GetDescendants()) do
+                                if d:IsA("TextLabel") then
+                                    d.TextTransparency = Visible and 0 or 1
+                                end
+                            end
+                        end
+                    end
+                end
+
+                function Window:SetSidebarCollapsed(Collapsed)
+                    Window.SidebarCollapsed = Collapsed and true or false
+                    local width = Window.SidebarCollapsed and Window._SidebarCollapsedWidth or Window._SidebarExpandedWidth
+                    Items["LeftTabs"]:Tween(
+                        TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+                        { Size = UDim2New(0, width, 1, 0) }
+                    )
+                    SetSidebarTabTexts(not Window.SidebarCollapsed)
+                end
+
+                function Window:ToggleSidebar()
+                    Window:SetSidebarCollapsed(not Window.SidebarCollapsed)
+                end
+
+                -- Desktop: hover expands when collapsed
+                -- Mobile: no hover — tap sidebar expands, tap content collapses
+                Items["LeftTabs"]:Connect("MouseEnter", function()
+                    if IsMobile then return end
+                    Window._SidebarHoverOpen = true
+                    if Window.SidebarCollapsed then
+                        Items["LeftTabs"]:Tween(
+                            TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+                            { Size = UDim2New(0, Window._SidebarExpandedWidth, 1, 0) }
+                        )
+                        SetSidebarTabTexts(true)
+                    end
+                end)
+
+                Items["LeftTabs"]:Connect("MouseLeave", function()
+                    if IsMobile then return end
+                    Window._SidebarHoverOpen = false
+                    if Window.SidebarCollapsed then
+                        task.delay(0.12, function()
+                            if Window.SidebarCollapsed and not Window._SidebarHoverOpen then
+                                Items["LeftTabs"]:Tween(
+                                    TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+                                    { Size = UDim2New(0, Window._SidebarCollapsedWidth, 1, 0) }
+                                )
+                                SetSidebarTabTexts(false)
+                            end
+                        end)
+                    end
+                end)
+
+                -- Mobile / touch: tap collapsed sidebar to expand (icons → full)
+                Items["LeftTabs"]:Connect("InputBegan", function(Input)
+                    if Input.UserInputType ~= Enum.UserInputType.Touch
+                        and Input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+                        return
+                    end
+                    if Window.SidebarCollapsed then
+                        Window:SetSidebarCollapsed(false)
+                    end
+                end)
+
+                -- Click content (not sidebar) to collapse to icons-only.
+                -- Ignore drags so window move does not collapse.
+                task.defer(function()
+                    local main = Items["MainFrame"] and Items["MainFrame"].Instance
+                    if not main then return end
+                    local pressPos = nil
+                    main.InputBegan:Connect(function(Input)
+                        if Input.UserInputType ~= Enum.UserInputType.MouseButton1
+                            and Input.UserInputType ~= Enum.UserInputType.Touch then
+                            return
+                        end
+                        pressPos = Input.Position
+                    end)
+                    main.InputEnded:Connect(function(Input)
+                        if Input.UserInputType ~= Enum.UserInputType.MouseButton1
+                            and Input.UserInputType ~= Enum.UserInputType.Touch then
+                            return
+                        end
+                        if not pressPos then return end
+                        local delta = (Input.Position - pressPos).Magnitude
+                        pressPos = nil
+                        if delta > 8 then return end -- was a drag
+
+                        local left = Items["LeftTabs"].Instance
+                        local pos = Input.Position
+                        local abs = left.AbsolutePosition
+                        local size = left.AbsoluteSize
+                        local overSidebar = pos.X >= abs.X and pos.X <= abs.X + size.X
+                            and pos.Y >= abs.Y and pos.Y <= abs.Y + size.Y
+                        if overSidebar then
+                            if Window.SidebarCollapsed then
+                                Window:SetSidebarCollapsed(false)
+                            end
+                            return
+                        end
+                        if not Window.SidebarCollapsed then
+                            Window:SetSidebarCollapsed(true)
+                        end
+                    end)
+                end)
+
+                -- Start expanded; user collapses by clicking content
+                Window:SetSidebarCollapsed(false)
+
     
                 Library:Connect(UserInputService.InputChanged, function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
