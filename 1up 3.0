@@ -2331,11 +2331,12 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(1, 0),
                     BackgroundTransparency = 0.15,
-                    Size = UDim2New(0, 220, 1, 0),
+                    Size = UDim2New(0, 168, 1, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
                 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
+                Items["LeftTabs"].Instance.ClipsDescendants = true
 
                 pcall(function() Library:MakeBlurred(Items["LeftTabs"], Window) end)
 
@@ -2419,6 +2420,18 @@ local Library do
                         { Size = UDim2New(0, width, 1, 0) }
                     )
                     SetSidebarTabTexts(not Window.SidebarCollapsed)
+                    -- fit logo: centered icon strip when collapsed, left-aligned when expanded
+                    if Items["Logo"] and Items["Logo"].Instance then
+                        if Window.SidebarCollapsed then
+                            Items["Logo"].Instance.Size = UDim2New(0, 40, 0, 40)
+                            Items["Logo"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
+                            Items["Logo"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
+                        else
+                            Items["Logo"].Instance.Size = UDim2New(0, 84, 0, 84)
+                            Items["Logo"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                            Items["Logo"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                        end
+                    end
                 end
 
                 function Window:ToggleSidebar()
@@ -2427,6 +2440,19 @@ local Library do
 
                 -- Desktop: hover expands when collapsed
                 -- Mobile: no hover — tap sidebar expands, tap content collapses
+                local function ApplyLogoLayout(Expanded)
+                    if not (Items["Logo"] and Items["Logo"].Instance) then return end
+                    if Expanded then
+                        Items["Logo"].Instance.Size = UDim2New(0, 84, 0, 84)
+                        Items["Logo"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                        Items["Logo"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                    else
+                        Items["Logo"].Instance.Size = UDim2New(0, 40, 0, 40)
+                        Items["Logo"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
+                        Items["Logo"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
+                    end
+                end
+
                 Items["LeftTabs"]:Connect("MouseEnter", function()
                     if IsMobile then return end
                     Window._SidebarHoverOpen = true
@@ -2436,6 +2462,7 @@ local Library do
                             { Size = UDim2New(0, Window._SidebarExpandedWidth, 1, 0) }
                         )
                         SetSidebarTabTexts(true)
+                        ApplyLogoLayout(true)
                     end
                 end)
 
@@ -2450,6 +2477,7 @@ local Library do
                                     { Size = UDim2New(0, Window._SidebarCollapsedWidth, 1, 0) }
                                 )
                                 SetSidebarTabTexts(false)
+                                ApplyLogoLayout(false)
                             end
                         end)
                     end
@@ -2633,7 +2661,7 @@ local Library do
                     Parent = Items["LeftTabs"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 120),
+                    Size = UDim2New(1, 0, 0, 100),
                     BorderSizePixel = 0,
                     ZIndex = 3,
                     LayoutOrder = -100,
@@ -2646,7 +2674,7 @@ local Library do
                     ImageColor3 = FromRGB(255, 255, 255),
                     ScaleType = Enum.ScaleType.Fit,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 108, 0, 108),
+                    Size = UDim2New(0, 84, 0, 84),
                     Image = "rbxassetid://" .. tostring(Window.Logo):gsub("rbxassetid://", ""),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 0, 0.5, 0),
@@ -3665,7 +3693,7 @@ local Library do
                     AutoButtonColor = false,
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    Size = UDim2New(0, 135, 0, 40),
+                    Size = UDim2New(1, 0, 0, 40),
                     ZIndex = 2,
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(124, 163, 255)
