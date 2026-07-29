@@ -7863,11 +7863,9 @@ Library.Sections.Tabbox = function(self, Data)
         end
 
         table.insert(Tabbox.Tabs, Tab)
-
         if #Tabbox.Tabs == 1 then
             Tab:Show()
         end
-
         return Tab
     end
 
@@ -8667,9 +8665,8 @@ function Library:_LinoriaBindGroupbox(Section)
             if ok then values = list end
         end
 
-        -- Linoria uses Default = 1 (index); 1up Dropdown expects value
         local def = Info.Default
-        if type(def) == "number" and type(values) == "table" then
+        if type(def) == "number" and type(values) == "table" and #values > 0 then
             def = values[def] or values[1]
         end
 
@@ -8879,18 +8876,12 @@ end
 function Library:CreateWindow(Cfg)
     Cfg = type(Cfg) == "table" and Cfg or {}
 
-    local winOk, Win = pcall(function()
-        return self:Window({
-            Name    = Cfg.Title or Cfg.Name or Cfg.name or "Window",
-            SubName = Cfg.SubTitle or Cfg.SubName or Cfg.Subtitle or "",
-            Logo    = Cfg.Logo or Cfg.logo,
-            TitleWords = Cfg.TitleWords or Cfg.Words,
-        })
-    end)
-    if not winOk or not Win then
-        warn("[CreateWindow] Window failed:", Win)
-        return nil
-    end
+    local Win = self:Window({
+        Name    = Cfg.Title or Cfg.Name or Cfg.name or "Window",
+        SubName = Cfg.SubTitle or Cfg.SubName or Cfg.Subtitle or "",
+        Logo    = Cfg.Logo or Cfg.logo,
+        TitleWords = Cfg.TitleWords or Cfg.Words,
+    })
 
     -- Window:AddTab("Name")  →  1up Window:Page({ Name = "Name" })
     function Win:AddTab(Name, Icon)
@@ -8957,12 +8948,16 @@ function Library:CreateWindow(Cfg)
         pcall(function() Win:SetCenter() end)
     end
 
-    -- Ensure visible (Window() already opens; force again safely)
+    -- Force visible (Linoria AutoShow)
     pcall(function()
         if Win.SetOpen then
             Win:SetOpen(true)
-        elseif Win.Items and Win.Items.MainFrame then
+        end
+        if Win.Items and Win.Items.MainFrame then
             Win.Items.MainFrame.Instance.Visible = true
+        end
+        if Win.IsOpen ~= nil then
+            Win.IsOpen = true
         end
     end)
 
